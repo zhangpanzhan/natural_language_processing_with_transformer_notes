@@ -77,9 +77,49 @@ item_id = "B0074BW614"
 query = "Is it good for reading?"
 retrieved_docs = es_retriever.retrieve(query=query, top_k=3, filters={"item_id":[item_id], "split":["train"]})
 
+initializing a reader
+- to load MiniLM model in haystack
+- 2 types of reader
+  - FARMReader: for fine-tuning and deploying; use this one.(fine-tune reading comprehension model in transformers and then reload in FARMReader)
+  - TransformersReader: inference only
+
+from haystack.reader.farm import FARMReader
+model_ckpt = "deepset/minilm-uncased-squad2"
+max_seq_length, doc_stride = 384, 128
+reader = FARMReader(model_name_or_path=model_ckpt, progress_bar=False,
+max_seq_len=max_seq_length, doc_stride=doc_stride, return_no_answer=True)
+
+reader.predict_on_texts(question=question, texts=[context], top_k=1)
+
+Putting it all together
+
+from haystack.pipeline import ExtractiveQAPipeline
+pipe = ExtractiveQAPipeline(reader, es_retriever)
+n_answers = 3
+preds = pipe.run(query=query, top_k_retriever=3, top_k_reader=n_answers, filters={"item_id": [item_id], "split":["train"]})
+print(f"Question: {preds['query']} \n")
+for idx in range(n_answers):
+  print(f"Answer {idx+1}: {preds['answers'][idx]['answer']}")
+  print(f"Review snippet: ...{preds['answers'][idx]['context']}...")
+  print("\n\n")
+
+Improving Our QA Pipleline
+
+retriever sets upper bound on performance of QA system.
+
+evaluate retrieval with sparse+dense representation
+recall metric: recall@k
+
+class PipelineNode
+class EvalRetrieverPipeline
+pipe = EvalRetrieverPipeline()
+labels = ...
+document_store.write_labels(labels, index="label") # write to elasticsearch
+labels_agg = document_store.get_all_labels_aggregated()... # one query, multiple labels
+run_pipeline(pipe, top_k_retriever=3)
+pipe.eval_retriever.recall
 
 
-evaluate retrieval: recall metric; recall@k
 - sparse encoders
 - dense: reduce k (k relevant documents to extract answer later) to improve latency 
 
