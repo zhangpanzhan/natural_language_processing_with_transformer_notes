@@ -1,0 +1,119 @@
+chapt 8 question and answering
+
+extractive QA: span of text in doc
+two stage: retrieve relevant docs + extract answers from them.
+
+dataset: SQuAD (pioneered at SubjQA)
+fullname: Stanford Question Answering Dataset
+format(question, review, [answer sentences])
+
+sample english articles from wikipedia
+- 1.0 version, each question has answer
+- 2.0 version, not guaranteed, performed well, but not reliable, consider NQ(Natural Question) dataset
+
+Extracting anwers from text
+
+use pretrained model MiniLM
+
+from transformers import AutoTokenizer
+model_ckpt = "deepset/minilm-uncased-squad2"
+tokenizer = AutoTokenizer.from_pretrained(model_cpkt)
+tokenizer(question, context, return_tensors='pt')
+
+from transformers import AutoModelForQuestionAnswering
+model = AutoModelForQuestionAnsering.from_pretrained(model_cpkt)
+
+from transformers import pipeline
+pipe = pipeline("qeustion-ansering", model = model, tokenizer = tokenizer)
+pipe(question = question, context = context, topk=3)
+pipe(question = "", context = context, handle_impossible_answer=True)
+
+Dealing with long passages
+
+context length > maximum seq length of model
+
+tokenizer(question, context, return_tensors='pt') =>
+tokenizer(question, context, return_tensors='pt', return_overflowing_tokens=True, max_length=100, stride=25)
+
+Using Haystack to Build a QA Pipeline
+
+concat all relevant docs as context will make avg lantency much longer.
+
+two stages: 
+
+retriever:  BM25 (sparse) + DPR(dense)
+- sparse: use freq as vectors and inner product as similarity
+- dense: transformers to encode query and docs as embedding
+reader: 
+- extract answers from relevant docs
+
+haystack library by deepset
+
+two another components:
+- docuement store: doc-oriented database storing all docs and metadata
+- pipeline: all components of QA
+
+docuement store compatible with retriever:
+ - sparse: tf-idf, bm25
+ - dense: embedding, dpr
+
+choose ElasticsearchDocumentStore (compatible both)
+
+document_store = ElasticsearchDocumentStore(return_embedding=True)
+
+- elasticsearch server running
+- instantiate elastic search document store
+  - create document index storing doc
+  - create label index storing answer spans
+
+document_store.write_documents(docs, index="document")
+
+initializing a retriever
+- sparse retriever based on BM25
+
+es_retriever = ElasticsearchRetriever(document_store=document_store)
+
+item_id = "B0074BW614"
+query = "Is it good for reading?"
+retrieved_docs = es_retriever.retrieve(query=query, top_k=3, filters={"item_id":[item_id], "split":["train"]})
+
+
+
+evaluate retrieval: recall metric; recall@k
+- sparse encoders
+- dense: reduce k (k relevant documents to extract answer later) to improve latency 
+
+evaluate reader
+
+exact match(em): common chars
+f1-score
+
+Domain Adaptation(boost performance)
+
+SubjQA: bad
+SQuAD: good
+
+fine tune MiniLM on SubjQA
+
+fine tune a pretrained model directly on SubjQA is bad.
+
+
+Evaluating the whole QA pipeline
+
+Eval retriever + reader
+
+Going Beyond Extractive QA
+
+abstractive/generative QA
+
+- generate better-phrased answers with pretrained language model.
+- synthesize evidence across multiple passages
+
+RAG (retrieval-augmented generation)
+
+DPR (retriever)+generator (reader)
+
+generator: seq2seq transformer that generates answers based query and these documents.
+
+- RAG sequence
+- RAG Token: perform better
