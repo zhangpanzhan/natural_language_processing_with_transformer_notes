@@ -102,7 +102,49 @@ pre layer normalization: within skip connection
 
 Positional encodings
 
-Absolute Positional representation
-Relative Positional representation
+method 1: use learnable pattern, when pretrained data is sufficiently large.
+
+if a sentence has 5 words, then [0, 1, 2, 3, 4] -> nn.embeding(hidden_size)
+note the diff with token embedding, [7124, 254, 13, 975, 222]-> nn.embedding(hidden_size)
+the token embedding's input is seq with maximum number of tokens
+the positional embedding's input is seq with maximum length of sequence
+
+method 2: Absolute Positional representation:  when no large dataset
+
+use static patterns, with sine and cosine signals to encode position.
+
+method 3: Relative Positional representation
+
+DEBert use this representation.
 
 Adding a classification head
+
+The decoder
+
+the decoder has 2 attention sublayers
+
+- masked multi-head self-attention layer: without look future tokens, just focus past and current tokens
+  - given a lower triangled masked matrix, and replace all 0s with -inf
+- encoder-decoder attention layer: use curent info as query, and compute attention scores with query in decoder and key, value from encoders.
+  - query: cartoon for current text (query)
+  - key, value: which passage match the description(key), draw next word with cartoon(value)
+
+Meet the transformers
+
+encoder branches:
+for nlu task: text classification, ner, question and answering
+- bert: mlm + nsp
+- DistilBert: low latency with knowledge distillation; 97% bert perf with 40% less mem and 60% faster
+- RoBerta: improve perf, trained on large batches with more data, drops nsp.
+- albert: make model efficient by allow small embeddings, all layers share same parameters, nsp replaced with sentence-ordering predition (sentence order swaped or not)
+
+decoder branch:
+predict next word; for text generation tasks.
+- gpt: novel and efficient transformer decoder and transfer learning. trained on bookcorpus.
+- gpt2: model larger, dataset larger, able to predict long sentence.
+- ctrl: adding control tokens for style generation
+- gpt3: generate more realistic texts, few-show learning (given fewer examples of new task, it can accomplish the task on new examples)
+
+encoder-decoder branch:
+- T5: unifies NLP and NLG(text2text tasks); generate text labels without classification.
+- BART: input sentence undergo several transformation(sent permu, token deletion, doc rotation) and reconstruct the original texts.
