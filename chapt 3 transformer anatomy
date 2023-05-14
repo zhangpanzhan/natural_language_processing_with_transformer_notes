@@ -40,3 +40,69 @@ decoder-only:
 - also called causal/autoregressive attention
 
 encoder-decoder:
+- transform one seq to another seq
+- for machine translation and summarization tasks
+- transformer, BART, T5 models
+
+the encoder
+
+each encoder has input of seq of embeddings and feed them into sublayers:
+1. multi-head self-attention layer
+2. fully connected feed-forward layer
+3. output of emebedding has same size of inputs, but update the input embeddings to encode context information in sequence; such as apple embedding update to be "company-like" and "fruit-less"
+4. other components: skip connection + layer normalization
+
+self-attention
+
+attention: assign weight/attention to each element in a sequence.
+
+"self": these weights are computed for all hidden states in the same set (e.g. all hidden states in encoder); query set are the same as key set
+
+instead of using fixed embedding for each token x1,..., xn, generate new sequence of embeddings x1', xn'
+xi' = linear combination of all xj = sum_j (wji . xj)
+embrace context info into embedding called contextualized embeddings
+"fruit flies like a banana"=> "insect"
+"time flies like an arrow" => "soars"
+
+scaled dot-product attention
+
+- project each token embedding into 3 vectors: query, key, value
+- compute attention/similarity scores
+- compute attention weights:  multiplied by a scaling factor to normalize variance and then normalized with softmax to ensure column sum to 1.
+- update token embeddings:  updated representation for embedding xi' = sum_j (wji.v_j)
+- equal query and key vectors will assign large score to identical words in context, but "flies" is better defined by "time" and "arrow" rather than another mention of "flies".
+- create different set of vectors for query, key, and value with different linear projections.
+
+mulit-head attention
+
+- use different linear transformation to each embedding to generate query, key and value
+- allow self-attention to focus on different semantic apspects of the sequence
+
+- multiple sets of linear projection, each one is attention head.
+- why more than one head? softmax of one head tends focus on one aspect of similarity like "subject-verb" interaction, but we need more like "nearby-adjectives" interaction
+- initi embedding size is 768, 12 heads, each head dim is 768/12 = 64
+
+
+Adding Layer normalization
+
+layer normalization: normalize each input in the batch to have 0 mean and 1 variance
+skip connection: pass a tensor to next layer without processed and add it to the processed tensor.
+
+2 main choice for layer normalization
+
+post layer normalization: between skip connection
+
+- multi-head attention with skip -> layer norm -> ffnn with skip -> layer norm
+- need learning rate warm as gradients can diverge.
+
+pre layer normalization: within skip connection
+
+- (layer norm + multi head attention) with skip -> (layer norm + ffnn) with skip
+- no need learning rate warm up
+
+Positional encodings
+
+Absolute Positional representation
+Relative Positional representation
+
+Adding a classification head
