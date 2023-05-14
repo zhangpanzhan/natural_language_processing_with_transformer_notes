@@ -1,0 +1,42 @@
+chapt 3 transformer anatomy
+
+intro
+
+- explore blocks of transformer; implementation by torch and tensorflow
+- other pieces to make transformer encoder to work
+- check diff between encoder and decoder
+- explore zoo of models in recent years
+
+the transformer architecture
+
+- encoder
+convert input seq of tokens into a seq of embedding vectors/hidden state/context
+key and value
+- decoder
+use encoder's hidden state to iteratively generate an output of seq of tokens, one token at a time.
+
+
+transformer architecture: originally for machine translation, but later as standalone models
+
+text tokenized -> token embeddings
+text tokenized -> position embeddings
+
+encoder or decoder is composed of layers of block
+encoder's output is fed into decoder's layer;
+decoder stops until it predict EOS token or reached maximum length.
+
+3 types:
+
+encoder-only:
+- convert input seq into numerical representation
+- suitable for text classification/ NER
+- Bert, RoBert, DistilBert
+- Bidirectional attention.
+
+decoder-only:
+- given prompt of text like "thanks for lunch, ...", autocomplete sentence by predicting next probable word.
+- family of GPT
+- depends only on left context
+- also called causal/autoregressive attention
+
+encoder-decoder:

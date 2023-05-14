@@ -108,6 +108,7 @@ Improving Our QA Pipleline
 retriever sets upper bound on performance of QA system.
 
 evaluate retrieval with sparse+dense representation
+
 recall metric: recall@k
 
 class PipelineNode
@@ -123,10 +124,28 @@ pipe.eval_retriever.recall
 - sparse encoders
 - dense: reduce k (k relevant documents to extract answer later) to improve latency 
 
-evaluate reader
+dense: sparse fail to capture relevant docs if query contain terms dismatches reviews. state of art is DPR(dense passage retrieval)
 
-exact match(em): common chars
-f1-score
+DPR: two bert models for both question and passage.
+
+from haystack.retriever.dense import DensePassageRetriever
+
+dpr_retriever = DensePassageRetriever(document_store=document_store,
+query_embedding_model="facebook/dpr-question_encoder-single-nq-base",
+passage_embedding_model="facebook/dpr-ctx_encoder-single-nq-base",
+embed_title=False)
+
+document_store.update_embeddings(retriever=dpr_retriever)
+
+
+Evaluate the reader page 45 to do (todo)
+
+exact match(em): match or not (two values)
+f1-score: 
+
+focus one metric is misleading, need to watch both.
+
+evaluate_reader(reader)
 
 Domain Adaptation(boost performance)
 
